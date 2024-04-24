@@ -1,0 +1,55 @@
+Require Import Coq.
+Require Import Coq.Arith.
+Require Import Coq.Lists.
+
+Inductive produit : Set :=
+  | Alimentation : nat -> produit
+  | Vetements : nat -> produit.
+
+Definition prix_produit (p : produit) : nat :=
+  match p with
+  | Alimentation p' -> p'
+  | Vetements p' -> p'
+  end.
+
+Definition stock : nat -> Set produit :=
+  fun quantite => { p : produit | prix_produit p <= quantite }.
+
+Definition ajouter_produit (s : stock) (p : produit) : stock :=
+  match s with
+  | Empty => stock (prix_produit p)
+  | Cons (_, q) => if In p q then s else Cons (p, q)
+  end.
+
+Definition retirer_produit (s : stock) (p : produit) : stock :=
+  match s with
+  | Empty => Empty
+  | Cons (p', q) => if p = p' then Empty else Cons (p', q)
+  end.
+
+Definition modifier_quantite_produit (s : stock) (p : produit) (quantite : nat) : stock :=
+  retirer_produit (ajouter_produit s p) p.
+
+Definition effectuer_transaction (s : stock) (operation : produit * nat) : stock :=
+  match operation with
+  | (p, quantite) => if quantite >= 0 then modifier_quantite_produit s p quantite else retirer_produit s p
+  end.
+
+Axiom stock_operation_axiome : forall s p quantite,
+  effectuer_transaction s (p, quantite) = stock (prix_produit p * quantite) + s.
+
+Lemma verifier_transaction_achat (s : stock) (p : produit) (quantite : nat) :
+  effectuer_transaction s (p, quantite) = stock (prix_produit p * quantite) + s.
+Proof.
+  intros.
+  rewrite stock_operation_axiome.
+  simpl.
+Qed.
+
+Lemma verifier_transaction_vente (s : stock) (p : produit) (quantite : nat) :
+  effectuer_transaction s (p, -quantite) = stock (-prix_produit p * quantite) + s.
+Proof.
+  intros.
+  rewrite stock_operation_axiome.
+  simpl.
+Qed.

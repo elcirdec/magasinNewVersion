@@ -1,0 +1,9 @@
+/**
+ * 
+ */
+/**
+ * @author Cirdec
+ *
+ */
+module bibliotheque {
+}
